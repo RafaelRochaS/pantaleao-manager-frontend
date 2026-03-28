@@ -8,6 +8,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - Next.js 16+ (App Router)
 - React, TypeScript, Tailwind CSS
 - UI Library: Shadcn UI
+- Package manager: yarn
 
 ## Rules & Conventions
 - Always write TypeScript with strict types (no `any`).
