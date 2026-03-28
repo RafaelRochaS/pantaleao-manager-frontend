@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Dice5, Users } from "lucide-react";
+import { Dice5, ScrollText, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
@@ -24,6 +24,12 @@ export default function Home() {
           <Button size="lg" variant="outline" className="gap-1.5">
             <Users className="size-4" />
             Jogadores
+          </Button>
+        </Link>
+        <Link href="/sessoes">
+          <Button size="lg" variant="outline" className="gap-1.5">
+            <ScrollText className="size-4" />
+            Sessões
           </Button>
         </Link>
       </div>

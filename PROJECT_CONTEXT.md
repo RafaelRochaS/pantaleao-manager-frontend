@@ -14,6 +14,11 @@
 - **Avatar:** Simple color or emoji (keep it low-cost/no external assets).
 - **Stats (Calculated):** Total games played, total wins, wins per game.
 
+## Scoring Logic
+- **Simple Score:** A single number (e.g., Azul).
+- **Categorized Score:** Multiple named fields with emojis (e.g., 7 Wonders Duel: 🏛️ Civilian, 🧪 Science, 🎖️ Military).
+- **Game Definition:** Each Game entity should now include a `scoringType` ('simple' | 'categories') and an optional `scoreCategories` array.
+
 ## Technical Preferences
 - **Styling:** Tailwind CSS + Shadcn UI.
 - **State:** React Hooks (keep it simple).

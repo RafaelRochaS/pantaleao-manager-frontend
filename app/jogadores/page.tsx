@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Plus, Trophy, Gamepad2 } from "lucide-react";
+import { Plus, Trophy, Gamepad2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -129,13 +128,6 @@ export default function PlayersPage() {
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-      <Link href="/">
-        <Button variant="ghost" size="sm" className="mb-4 gap-1">
-          <ArrowLeft className="size-4" />
-          Voltar
-        </Button>
-      </Link>
-
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Jogadores</h1>

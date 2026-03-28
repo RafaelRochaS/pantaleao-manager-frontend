@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Dice5, Plus, Puzzle, Swords } from "lucide-react";
+import { Dice5, Plus, Puzzle, Swords, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,38 +22,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-interface Game {
-  id: number;
-  title: string;
-  genre: string;
-  expansions: string[];
-  matchesPlayed: number;
-}
-
-const INITIAL_GAMES: Game[] = [
-  {
-    id: 1,
-    title: "7 Wonders Duel",
-    genre: "Estratégia",
-    expansions: ["Pantheon", "Agora"],
-    matchesPlayed: 24,
-  },
-  {
-    id: 2,
-    title: "Santorini",
-    genre: "Abstrato",
-    expansions: ["Golden Fleece"],
-    matchesPlayed: 18,
-  },
-  {
-    id: 3,
-    title: "Azul",
-    genre: "Puzzle",
-    expansions: [],
-    matchesPlayed: 31,
-  },
-];
+import { useGames } from "@/hooks/useGames";
+import type { Game, ScoreCategory } from "@/types/game";
 
 const GENRE_ICON: Record<string, React.ReactNode> = {
   Estratégia: <Swords className="size-4" />,
@@ -75,6 +44,22 @@ function GameCard({ game }: { game: Game }) {
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
+        <div>
+          <p className="text-xs font-medium text-muted-foreground">
+            Pontuação
+          </p>
+          {game.scoringType === "categories" ? (
+            <div className="mt-1 flex flex-wrap gap-1">
+              {game.scoreCategories.map((cat) => (
+                <Badge key={cat.name} variant="outline" className="text-xs">
+                  {cat.emoji} {cat.name}
+                </Badge>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-1 text-sm text-muted-foreground">Pontuação simples</p>
+          )}
+        </div>
         <div>
           <p className="text-xs font-medium text-muted-foreground">
             Expansões
@@ -104,6 +89,8 @@ function GameCard({ game }: { game: Game }) {
   );
 }
 
+const EMPTY_CATEGORY: ScoreCategory = { name: "", emoji: "" };
+
 function AddGameDialog({
   onAdd,
 }: {
@@ -113,10 +100,39 @@ function AddGameDialog({
   const [title, setTitle] = useState("");
   const [genre, setGenre] = useState("");
   const [expansions, setExpansions] = useState("");
+  const [scoringType, setScoringType] = useState<"simple" | "categories">("simple");
+  const [categories, setCategories] = useState<ScoreCategory[]>([{ ...EMPTY_CATEGORY }]);
+
+  function resetForm() {
+    setTitle("");
+    setGenre("");
+    setExpansions("");
+    setScoringType("simple");
+    setCategories([{ ...EMPTY_CATEGORY }]);
+  }
+
+  function updateCategory(index: number, field: keyof ScoreCategory, value: string) {
+    setCategories((prev) =>
+      prev.map((cat, i) => (i === index ? { ...cat, [field]: value } : cat))
+    );
+  }
+
+  function addCategoryRow() {
+    setCategories((prev) => [...prev, { ...EMPTY_CATEGORY }]);
+  }
+
+  function removeCategoryRow(index: number) {
+    setCategories((prev) => prev.filter((_, i) => i !== index));
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim() || !genre.trim()) return;
+
+    const scoreCategories =
+      scoringType === "categories"
+        ? categories.filter((c) => c.name.trim() && c.emoji.trim())
+        : [];
 
     onAdd({
       title: title.trim(),
@@ -125,11 +141,11 @@ function AddGameDialog({
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean),
+      scoringType,
+      scoreCategories,
     });
 
-    setTitle("");
-    setGenre("");
-    setExpansions("");
+    resetForm();
     setOpen(false);
   }
 
@@ -143,7 +159,7 @@ function AddGameDialog({
           </Button>
         }
       />
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Novo Jogo</DialogTitle>
           <DialogDescription>
@@ -180,6 +196,69 @@ function AddGameDialog({
               onChange={(e) => setExpansions(e.target.value)}
             />
           </div>
+          <div className="space-y-2">
+            <Label>Tipo de Pontuação</Label>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant={scoringType === "simple" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setScoringType("simple")}
+              >
+                Simples
+              </Button>
+              <Button
+                type="button"
+                variant={scoringType === "categories" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setScoringType("categories")}
+              >
+                Categorias
+              </Button>
+            </div>
+          </div>
+          {scoringType === "categories" && (
+            <div className="space-y-3">
+              <Label>Categorias de Pontuação</Label>
+              <div className="space-y-2">
+                {categories.map((cat, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <Input
+                      className="w-16 shrink-0 text-center"
+                      placeholder="🎯"
+                      value={cat.emoji}
+                      onChange={(e) => updateCategory(index, "emoji", e.target.value)}
+                    />
+                    <Input
+                      className="flex-1"
+                      placeholder="Nome da categoria"
+                      value={cat.name}
+                      onChange={(e) => updateCategory(index, "name", e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      disabled={categories.length <= 1}
+                      onClick={() => removeCategoryRow(index)}
+                    >
+                      <Trash2 className="size-4 text-muted-foreground" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full gap-1"
+                onClick={addCategoryRow}
+              >
+                <Plus className="size-3.5" />
+                Adicionar Categoria
+              </Button>
+            </div>
+          )}
           <DialogFooter>
             <Button type="submit">Salvar</Button>
           </DialogFooter>
@@ -190,23 +269,10 @@ function AddGameDialog({
 }
 
 export default function GamesPage() {
-  const [games, setGames] = useState<Game[]>(INITIAL_GAMES);
-
-  function handleAddGame(data: Omit<Game, "id" | "matchesPlayed">) {
-    setGames((prev) => [
-      ...prev,
-      { ...data, id: Date.now(), matchesPlayed: 0 },
-    ]);
-  }
+  const { games, addGame } = useGames();
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
-      <Link href="/">
-        <Button variant="ghost" size="sm" className="mb-4 gap-1">
-          <ArrowLeft className="size-4" />
-          Voltar
-        </Button>
-      </Link>
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Jogos</h1>
@@ -214,7 +280,7 @@ export default function GamesPage() {
             Gerencie sua coleção de jogos de tabuleiro.
           </p>
         </div>
-        <AddGameDialog onAdd={handleAddGame} />
+        <AddGameDialog onAdd={addGame} />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
